@@ -23,3 +23,6 @@ pnpm-debug.log*
 *.sw?
 
 .vercel
+
+# Ignore npm configuration file
+.npmrc
