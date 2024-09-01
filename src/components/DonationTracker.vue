@@ -40,13 +40,15 @@ export default {
     const goal = 1000; // Example goal amount in USD
     const progress = ref(0);
 
-    const backendUrl = process.env.VUE_APP_BACKEND_URL;
-    console.log("Backend URL:", backendUrl); // Should print the correct URL
+    const backendUrl =
+      process.env.VUE_APP_BACKEND_URL || "http://localhost:5001";
+
     const fetchProgress = async () => {
       try {
         const response = await fetch(`${backendUrl}/api/donations/progress`);
         const data = await response.json();
         progress.value = data.totalRaised;
+        console.log("Updated progress:", data.totalRaised); // Ensure this logs the correct amount
       } catch (error) {
         console.error("Error fetching donation progress:", error);
       }
@@ -73,8 +75,10 @@ export default {
             });
           },
           onApprove: async (data, actions) => {
-            await actions.order.capture();
-            // Fetch progress again after a successful payment
+            const order = await actions.order.capture();
+            console.log("Donation successful:", order); // Console log for debugging
+
+            // Fetch updated progress after successful payment
             fetchProgress();
           },
         })

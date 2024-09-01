@@ -11,6 +11,9 @@ dependencies:
   vue:
     specifier: ^3.2.13
     version: 3.2.13
+  vue-toastification:
+    specifier: 1.7.14
+    version: 1.7.14(vue@3.2.13)
 
 devDependencies:
   '@babel/core':
@@ -7176,6 +7179,14 @@ packages:
   /vue-template-es2015-compiler@1.9.1:
     resolution: {integrity: sha512-4gDntzrifFnCEvyoO8PqyJDmguXgVPxKiIxrBKjIowvL9l+N66196+72XVYR8BBf1Uv1Fgt3bGevJ+sEmxfZzw==}
     dev: true
+
+  /vue-toastification@1.7.14(vue@3.2.13):
+    resolution: {integrity: sha512-khZR8t3NWZ/JJ2MZxXLbesHrRJ8AKa75PY5Zq8yMifF9x8lHq8ljYkC0d2PD9yahooygQB5tcFyRDkbbIPx8hw==}
+    peerDependencies:
+      vue: ^2.0.0
+    dependencies:
+      vue: 3.2.13
+    dev: false
 
   /vue@3.2.13:
     resolution: {integrity: sha512-raTGvLXXTdMxrhQKY1r1YFXZMmjbjTe7QHBW9EU4CgCBhq8DbgyLqgILcSUZmeFyazk5WY7a7xu0VYmHElf4lA==}
