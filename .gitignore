@@ -2,6 +2,9 @@
 node_modules
 /dist
 
+# Ignore Python virtual environments
+venv/
+
 
 # local env files
 .env.local
