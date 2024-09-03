@@ -3,25 +3,37 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "start": "node donation-tracker-backend/server.js",
+    "start:dev": "nodemon donation-tracker-backend/server.js",
+    "serve": "pnpm vue-cli-service serve",
+    "build": "pnpm vue-cli-service build",
+    "lint": "pnpm vue-cli-service lint",
+    "dev": "pnpm concurrently \"pnpm run start:dev\" \"pnpm run serve\""
   },
   "dependencies": {
-    "core-js": "^3.8.3",
-    "vue": "^3.2.13",
-    "vue-toastification": "1.7.14"
+    "@grpc/proto-loader": "0.7.12",
+    "@paypal/checkout-server-sdk": "1.0.3",
+    "core-js": "^3.38.1",
+    "cors": "2.8.5",
+    "dotenv": "16.4.5",
+    "express": "4.19.2",
+    "firebase": "10.13.1",
+    "firebase-admin": "12.2.0",
+    "protobufjs": "7.2.0",
+    "vue": "^3.5.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.16",
-    "@babel/eslint-parser": "^7.12.16",
-    "@vue/cli-plugin-babel": "~5.0.0",
-    "@vue/cli-plugin-eslint": "~5.0.0",
-    "@vue/cli-service": "~5.0.0",
+    "@babel/core": "^7.25.2",
+    "@babel/eslint-parser": "^7.25.1",
+    "@vue/cli-plugin-babel": "~5.0.8",
+    "@vue/cli-plugin-eslint": "~5.0.8",
+    "@vue/cli-service": "~5.0.8",
     "autoprefixer": "^10.4.20",
+    "concurrently": "^7.6.0",
     "eslint": "^7.32.0",
-    "eslint-plugin-vue": "^8.0.3",
-    "postcss": "^8.4.41",
+    "eslint-plugin-vue": "^8.7.1",
+    "nodemon": "^2.0.22",
+    "postcss": "^8.4.44",
     "tailwindcss": "^3.4.10"
   },
   "eslintConfig": {

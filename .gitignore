@@ -1,73 +1,21 @@
-.DS_Store
-node_modules
-/dist
-
-# Ignore Python virtual environments
-venv/
-
-
-# local env files
-.env.local
-.env.*.local
-.env
-
-# Log files
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# Editor directories and files
-.idea
-.vscode
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-.vercel
-
-# Ignore npm configuration file
-.npmrc
-
-# Ignore Python bytecode files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Ignore virtual environment directories
-venv/
-.env/
-env/
-
-# Ignore IDE/editor-specific files
+# Node.js
+node_modules/
+dist/
 .vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
-
-# Ignore OS-generated files
+.npmrc
+.env
+.vercel
 .DS_Store
-Thumbs.db
+/config/firebaseServiceAccountKey.json
 
-# Ignore log files
+# Logs
 *.log
 
-# Ignore compiled libraries
-*.so
-*.dylib
-*.dll
-
-# Ignore Python egg and build files
-*.egg-info/
-.eggs/
-build/
-dist/
-pip-wheel-metadata/
-
-# Ignore Jupyter Notebook checkpoints
-.ipynb_checkpoints/
-
-# Ignore environment variable files
-.env
+# Python
+donation-tracker-backend/venv/
+donation-tracker-backend/app/
+donation-tracker-backend/__pycache__/
+donation-tracker-backend/database.db
+# Make sure this is intentional:
+# donation-tracker-backend/requirements.txt
+donation-tracker-backend/run.py

@@ -41,14 +41,14 @@ export default {
     const progress = ref(0);
 
     const backendUrl =
-      process.env.VUE_APP_BACKEND_URL || "http://localhost:5001";
+      process.env.VUE_APP_BACKEND_URL || "http://localhost:8001";
 
     const fetchProgress = async () => {
       try {
         const response = await fetch(`${backendUrl}/api/donations/progress`);
         const data = await response.json();
         progress.value = data.totalRaised;
-        console.log("Updated progress:", data.totalRaised); // Ensure this logs the correct amount
+        console.log("Updated progress:", data.totalRaised);
       } catch (error) {
         console.error("Error fetching donation progress:", error);
       }
@@ -58,25 +58,34 @@ export default {
       return ((progress.value / goal) * 100).toFixed(2);
     });
 
+    // In case 'data' and 'actions' are used in the future, but not yet, disable the ESLint warning:
+    // eslint-disable-next-line no-unused-vars
+    const unusedVariable = null;
+
     onMounted(() => {
       fetchProgress();
 
       paypal
         .Buttons({
-          createOrder: (data, actions) => {
-            return actions.order.create({
-              purchase_units: [
-                {
-                  amount: {
-                    value: "10.00", // Set the amount for the donation
-                  },
+          // eslint-disable-next-line no-unused-vars
+          createOrder: async (data, actions) => {
+            const response = await fetch(
+              `${backendUrl}/api/paypal/create-order`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
                 },
-              ],
-            });
+                body: JSON.stringify({ amount: "10.00" }), // Example amount
+              }
+            );
+            const order = await response.json();
+            return order.id;
           },
+          // eslint-disable-next-line no-unused-vars
           onApprove: async (data, actions) => {
             const order = await actions.order.capture();
-            console.log("Donation successful:", order); // Console log for debugging
+            console.log("Donation successful:", order);
 
             // Fetch updated progress after successful payment
             fetchProgress();
