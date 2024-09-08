@@ -31,24 +31,36 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 /* global paypal */
 import { ref, computed, onMounted } from "vue";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  setDoc,
+  collection,
+  getDocs,
+} from "firebase/firestore"; // Importing collection and getDocs correctly
+import { db } from "../firebaseConfig"; // Ensure this points to your firebaseConfig file
+import { QuerySnapshot, DocumentData } from "firebase/firestore";
 
 export default {
   setup() {
     const goal = 1000; // Example goal amount in USD
     const progress = ref(0);
 
-    const backendUrl =
-      process.env.VUE_APP_BACKEND_URL || "http://localhost:8001";
-
     const fetchProgress = async () => {
       try {
-        const response = await fetch(`${backendUrl}/api/donations/progress`);
-        const data = await response.json();
-        progress.value = data.totalRaised;
-        console.log("Updated progress:", data.totalRaised);
+        const donationsRef = doc(db, "donations", "progress");
+        const docSnapshot = await getDoc(donationsRef);
+
+        if (docSnapshot.exists()) {
+          const data = docSnapshot.data();
+          progress.value = data.totalRaised || 0; // Safely retrieve totalRaised
+        } else {
+          console.error("No such document!");
+        }
       } catch (error) {
         console.error("Error fetching donation progress:", error);
       }
@@ -58,36 +70,47 @@ export default {
       return ((progress.value / goal) * 100).toFixed(2);
     });
 
-    // In case 'data' and 'actions' are used in the future, but not yet, disable the ESLint warning:
-    // eslint-disable-next-line no-unused-vars
-    const unusedVariable = null;
-
     onMounted(() => {
-      fetchProgress();
+      fetchProgress(); // Fetch initial progress when component mounts
 
       paypal
         .Buttons({
-          // eslint-disable-next-line no-unused-vars
-          createOrder: async (data, actions) => {
-            const response = await fetch(
-              `${backendUrl}/api/paypal/create-order`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
+          createOrder: (data: unknown, actions: any) => {
+            return actions.order.create({
+              purchase_units: [
+                {
+                  amount: {
+                    value: "10.00", // The donation amount
+                  },
                 },
-                body: JSON.stringify({ amount: "10.00" }), // Example amount
-              }
-            );
-            const order = await response.json();
-            return order.id;
+              ],
+            });
           },
-          // eslint-disable-next-line no-unused-vars
-          onApprove: async (data, actions) => {
+          onApprove: async (data: unknown, actions: any) => {
             const order = await actions.order.capture();
             console.log("Donation successful:", order);
 
-            // Fetch updated progress after successful payment
+            // Parse the order amount as a float to avoid NaN issues
+            const donationAmount = parseFloat(
+              order.purchase_units[0].amount.value
+            );
+
+            // Update Firestore directly with the donation amount
+            const donationsRef = doc(db, "donations", "progress");
+
+            const docSnapshot = await getDoc(donationsRef);
+            if (docSnapshot.exists()) {
+              const currentTotal = docSnapshot.data().totalRaised || 0; // Ensure currentTotal is not undefined
+              await updateDoc(donationsRef, {
+                totalRaised: currentTotal + donationAmount,
+              });
+            } else {
+              await setDoc(donationsRef, {
+                totalRaised: donationAmount,
+              });
+            }
+
+            // Fetch the updated progress after a successful donation
             fetchProgress();
           },
         })

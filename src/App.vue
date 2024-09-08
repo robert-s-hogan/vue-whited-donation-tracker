@@ -6,6 +6,7 @@
 
 <script>
 import DonationTracker from "./components/DonationTracker.vue";
+import "./assets/base.css";
 
 export default {
   components: {
@@ -13,7 +14,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-/* Add any additional styles if needed */
-</style>

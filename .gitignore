@@ -1,21 +1,44 @@
-# Node.js
+# Node.js related
 node_modules/
 dist/
 .vscode/
-.npmrc
-.env
-.vercel
-.DS_Store
-/config/firebaseServiceAccountKey.json
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Firebase Functions
+functions/node_modules/
+functions/.env
 
 # Logs
+logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
 
-# Python
+# Environment variables
+.env
+.env.*.local
+
+# Firebase config
+.firebase/
+config/firebaseServiceAccountKey.json
+
+# Vercel
+.vercel
+
+# OSX and Linux system files
+.DS_Store
+
+# Python related (if applicable)
 donation-tracker-backend/venv/
 donation-tracker-backend/app/
 donation-tracker-backend/__pycache__/
 donation-tracker-backend/database.db
-# Make sure this is intentional:
-# donation-tracker-backend/requirements.txt
-donation-tracker-backend/run.py
+
+# Potential backups
+*.bak
+*.swp
+*.swo
