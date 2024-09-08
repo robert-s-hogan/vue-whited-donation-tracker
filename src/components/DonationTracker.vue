@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-lg mx-auto p-6 bg-white shadow-lg rounded-lg">
     <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">
-      Support Our School
+      Whited Donation Tracker
     </h2>
 
     <!-- Thermometer Visualization -->
