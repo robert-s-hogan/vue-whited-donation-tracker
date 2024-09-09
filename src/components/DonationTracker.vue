@@ -4,49 +4,50 @@
       Whited Donation Tracker
     </h2>
 
-    <!-- Thermometer Visualization -->
-    <div class="flex items-center justify-center mb-8">
-      <div class="w-12 bg-gray-200 rounded-full h-64 relative overflow-hidden">
+    <!-- Thermometer Progress Bar -->
+    <div class="relative mb-6">
+      <!-- Background Bar -->
+      <div class="h-4 bg-gray-300 rounded-full overflow-hidden relative">
+        <!-- Progress Fill -->
         <div
-          :style="{ height: progressPercentage + '%' }"
-          class="bg-gradient-to-t from-green-500 to-green-200 absolute bottom-0 left-0 right-0 rounded-full transition-transform duration-500 ease-out"
+          v-if="donationStore.progressPercentage"
+          :style="{ width: donationStore.progressPercentage + '%' }"
+          class="bg-green-500 h-full rounded-full transition-all duration-500 ease-in-out"
         ></div>
-        <!-- Milestone marker at 50% -->
+
+        <!-- Goal Markers -->
         <div
-          class="absolute w-full text-center bottom-[50%] transform translate-y-1/2 text-gray-600 font-bold text-sm"
+          v-for="goal in donationStore.goals"
+          :key="goal.name"
+          class="marker relative group"
+          :style="{ left: calculateGoalPosition(goal) + '%' }"
         >
-          50%
+          <!-- Marker Circle -->
+          <div
+            class="h-4 w-4 bg-gray-600 rounded-full cursor-pointer hover:bg-green-600"
+            :style="{ transform: 'translateX(-50%)' }"
+          ></div>
+
+          <!-- Popover (Shows on Hover) -->
+          <div
+            class="popover absolute bottom-[150%] left-1/2 transform -translate-x-1/2 p-2 bg-white text-sm shadow-lg rounded-lg opacity-0 group-hover:opacity-100"
+          >
+            <div class="font-bold">{{ goal.name }}</div>
+            <div>Target: ${{ goal.target }}</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Horizontal Progress Bar -->
-    <div class="h-4 bg-gray-300 rounded-full overflow-hidden mb-6">
-      <div
-        :style="{ width: progressPercentage + '%' }"
-        class="bg-green-500 h-full rounded-full transition-all duration-500 ease-in-out"
-      ></div>
+    <!-- Total Raised and Goal -->
+    <div class="flex justify-between text-sm text-gray-700 mt-2">
+      <span>Total Raised: ${{ donationStore.totalRaised }}</span>
+      <span>Goal: ${{ donationStore.combinedGoalTarget }}</span>
     </div>
 
-    <!-- Goal and Raised Amount -->
-    <div class="flex justify-between mb-6">
-      <div>
-        <span
-          class="text-sm font-semibold inline-block py-1 px-3 uppercase rounded-full text-white bg-green-500"
-        >
-          Goal: ${{ goal }}
-        </span>
-      </div>
-      <div class="text-right text-sm text-gray-700">${{ progress }} raised</div>
-    </div>
-
-    <!-- Success Message -->
-    <div
-      v-if="showSuccess"
-      class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-6"
-    >
-      <strong class="font-bold">Success!</strong>
-      <span class="block sm:inline">Thank you for your donation!</span>
+    <!-- Total Donations Display -->
+    <div class="text-right text-sm text-gray-700 mb-6">
+      <strong>Total Donations:</strong> {{ donationStore.totalDonations }}
     </div>
 
     <!-- PayPal Button Container -->
@@ -55,66 +56,24 @@
 </template>
 
 <script lang="ts">
-/* global paypal */
-import { ref, computed, onMounted } from "vue";
-import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore"; // Firebase Firestore imports
-import { db } from "../firebaseConfig"; // Ensure this points to your firebaseConfig file
+import { onMounted } from "vue";
+import { useDonationStore } from "../stores/useDonationStore"; // Import the Pinia store
 
 export default {
   setup() {
-    const goal = 1000; // Example goal amount in USD
-    const progress = ref(0); // Track current donation progress
-    const showSuccess = ref(false); // Manage success message state
+    const donationStore = useDonationStore(); // Access the store
 
-    const fetchProgress = async () => {
-      try {
-        const donationsRef = doc(db, "donations", "progress");
-        const docSnapshot = await getDoc(donationsRef);
-
-        if (docSnapshot.exists()) {
-          const data = docSnapshot.data();
-          progress.value = data.totalRaised || 0; // Safely retrieve totalRaised
-        } else {
-          console.error("No such document!");
-        }
-      } catch (error) {
-        console.error("Error fetching donation progress:", error);
+    // Function to calculate the position of each goal on the progress bar
+    const calculateGoalPosition = (goal: { target: number }) => {
+      const combinedGoalTarget = donationStore.combinedGoalTarget;
+      if (combinedGoalTarget === 0) {
+        return 0; // No position if there is no combined goal
       }
-    };
-
-    const progressPercentage = computed(() => {
-      return ((progress.value / goal) * 100).toFixed(2); // Calculate progress percentage
-    });
-
-    const handleDonationSuccess = async (order: any) => {
-      const donationAmount = parseFloat(order.purchase_units[0].amount.value); // Get donation amount
-
-      // Update Firestore with new donation
-      const donationsRef = doc(db, "donations", "progress");
-      const docSnapshot = await getDoc(donationsRef);
-
-      if (docSnapshot.exists()) {
-        const currentTotal = docSnapshot.data().totalRaised || 0;
-        await updateDoc(donationsRef, {
-          totalRaised: currentTotal + donationAmount,
-        });
-      } else {
-        await setDoc(donationsRef, {
-          totalRaised: donationAmount,
-        });
-      }
-
-      fetchProgress(); // Refresh progress data after donation
-
-      // Show success message for 3 seconds
-      showSuccess.value = true;
-      setTimeout(() => {
-        showSuccess.value = false;
-      }, 3000);
+      return ((goal.target / combinedGoalTarget) * 100).toFixed(2); // Calculate percentage position
     };
 
     onMounted(() => {
-      fetchProgress(); // Fetch progress when component mounts
+      donationStore.fetchProgress(); // Fetch donation progress when the component mounts
 
       paypal
         .Buttons({
@@ -132,35 +91,35 @@ export default {
           onApprove: async (data: unknown, actions: any) => {
             const order = await actions.order.capture();
             console.log("Donation successful:", order);
-            handleDonationSuccess(order); // Call success handler after donation
+            donationStore.handleDonationSuccess(order); // Handle donation success
           },
         })
         .render("#paypal-button-container");
     });
 
     return {
-      goal,
-      progress,
-      progressPercentage,
-      showSuccess,
+      donationStore,
+      calculateGoalPosition,
     };
   },
 };
 </script>
 
 <style scoped>
-/* Optional styling for success message bounce effect */
-@keyframes bounce {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+.popover {
+  transition: opacity 0.3s ease;
+  opacity: 0;
+  z-index: 10;
 }
 
-.animated-bounce {
-  animation: bounce 0.5s ease-in-out;
+.group:hover .popover {
+  opacity: 1; /* Show popover on hover */
+}
+
+.marker {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  cursor: pointer;
 }
 </style>

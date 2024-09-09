@@ -59,12 +59,17 @@ export const paypalWebhook = onRequest(
 
       if (docSnapshot.exists) {
         const currentTotal = docSnapshot.data()?.totalRaised || 0;
+        const currentDonations = docSnapshot.data()?.totalDonations || 0;
+
         await donationsRef.update({
           totalRaised: currentTotal + amount,
+          totalDonations: currentDonations + 1,
         });
       } else {
+        // Initialize totalRaised and totalDonations if the document doesn't exist
         await donationsRef.set({
           totalRaised: amount,
+          totalDonations: 1,
         });
       }
       logger.info("Donation successfully captured and stored.");
