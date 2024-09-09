@@ -1,61 +1,59 @@
 <template>
   <div class="max-w-lg mx-auto p-6 bg-white shadow-lg rounded-lg relative z-10">
-    <h2 class="text-2xl font-bold mb-6 text-center text-gray-800 relative z-10">
+    <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">
       Whited Donation Tracker
     </h2>
 
-    <!-- Thermometer Progress Bar -->
-    <div class="relative mb-6 z-10">
-      <!-- Background Bar -->
-      <div class="h-4 bg-gray-300 rounded-full overflow-visible relative">
-        <!-- Progress Fill -->
-        <div
-          v-if="donationStore.progressPercentage"
-          :style="{ width: donationStore.progressPercentage + '%' }"
-          class="bg-green-500 h-full rounded-full transition-all duration-500 ease-in-out"
-        ></div>
-
-        <!-- Goal Markers -->
-        <div
-          v-for="(goal, index) in donationStore.goals"
-          :key="goal.name"
-          class="marker absolute top-0 group"
-          :style="{ left: calculateGoalPosition(goal) + '%' }"
-        >
-          <!-- Marker Circle -->
-          <div
-            class="h-4 w-4 bg-gray-600 rounded-full cursor-pointer group-hover:bg-green-600 transform -translate-x-1/2"
-          ></div>
-
-          <!-- Popover (Shows on Hover) -->
-          <div
-            :class="{
-              'absolute bottom-full': index % 2 !== 0, // Odd markers above
-              'absolute top-full': index % 2 === 0, // Even markers below
-            }"
-            class="left-1/2 -translate-x-1/2 w-48 p-4 bg-white text-sm shadow-lg rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 ease-in-out z-[9999]"
-          >
-            <div class="font-bold">{{ goal.name }}</div>
-            <div>Target: ${{ goal.target }}</div>
-            <!-- Additional content for popover -->
-            <div class="mt-2">
-              <a href="#" class="text-blue-500 underline">Learn More</a>
-              <!-- Add an image or any other content you need -->
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Use the Donation Progress Bar component -->
+    <DonationProgressBar
+      :goals="donationStore.goals"
+      :totalRaised="donationStore.totalRaised"
+      :combinedGoalTarget="donationStore.combinedGoalTarget"
+    />
 
     <!-- Total Raised and Goal -->
-    <div class="flex justify-between text-sm text-gray-700 mt-2">
+    <div class="flex justify-between text-sm text-gray-700 mt-2 mb-6">
       <span>Total Raised: ${{ donationStore.totalRaised }}</span>
       <span>Goal: ${{ donationStore.combinedGoalTarget }}</span>
     </div>
 
-    <!-- Total Donations Display -->
-    <div class="text-right text-sm text-gray-700 mb-6">
-      <strong>Total Donations:</strong> {{ donationStore.totalDonations }}
+    <!-- Donation Options -->
+    <div class="text-center mb-4">
+      <h3 class="font-semibold text-lg mb-2">Choose Donation Amount</h3>
+
+      <!-- Preset Buttons -->
+      <div class="flex justify-center space-x-2 mb-4">
+        <button
+          v-for="amount in presetAmounts"
+          :key="amount"
+          @click="setPresetAmount(amount)"
+          class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full"
+        >
+          ${{ amount }}
+        </button>
+      </div>
+
+      <!-- Custom Slider -->
+      <div class="mb-4">
+        <label for="donationSlider" class="block font-medium mb-1"
+          >Custom Donation:</label
+        >
+        <input
+          type="range"
+          id="donationSlider"
+          min="1"
+          max="100"
+          step="1"
+          v-model="sliderValue"
+          class="w-full"
+        />
+        <p class="mt-2">Selected Amount: ${{ sliderValue }}</p>
+      </div>
+    </div>
+
+    <!-- Display Selected Donation -->
+    <div class="text-center text-lg font-bold mb-6">
+      You are donating: ${{ selectedAmount }}
     </div>
 
     <!-- PayPal Button Container -->
@@ -64,21 +62,34 @@
 </template>
 
 <script lang="ts">
-import { onMounted } from "vue";
+import { onMounted, ref, watch } from "vue";
+import DonationProgressBar from "./DonationProgressBar.vue"; // Import the progress bar component
 import { useDonationStore } from "../stores/useDonationStore"; // Import the Pinia store
 
 export default {
+  components: {
+    DonationProgressBar, // Register the component
+  },
   setup() {
     const donationStore = useDonationStore(); // Access the store
 
-    // Function to calculate the position of each goal on the progress bar
-    const calculateGoalPosition = (goal: { target: number }) => {
-      const combinedGoalTarget = donationStore.combinedGoalTarget;
-      if (combinedGoalTarget === 0) {
-        return 0; // No position if there is no combined goal
+    // State for donation amounts
+    const presetAmounts = [10, 25, 50, 100];
+    const sliderValue = ref<number>(10); // Default slider value
+    const selectedAmount = ref<number>(10); // Default selected donation
+
+    // Function to set the donation amount from preset buttons
+    const setPresetAmount = (amount: number) => {
+      if (amount > 0) {
+        selectedAmount.value = amount;
+        sliderValue.value = amount; // Synchronize slider with preset button
       }
-      return ((goal.target / combinedGoalTarget) * 100).toFixed(2); // Calculate percentage position
     };
+
+    // Watch the sliderValue and automatically update the selectedAmount
+    watch(sliderValue, (newValue: number) => {
+      selectedAmount.value = newValue; // Keep selectedAmount and sliderValue synchronized
+    });
 
     onMounted(() => {
       donationStore.fetchProgress(); // Fetch donation progress when the component mounts
@@ -86,11 +97,18 @@ export default {
       paypal
         .Buttons({
           createOrder: (data: unknown, actions: any) => {
+            // Ensure selectedAmount is a number
+            const donationAmount = Number(selectedAmount.value);
+
+            if (isNaN(donationAmount)) {
+              throw new Error("Invalid donation amount");
+            }
+
             return actions.order.create({
               purchase_units: [
                 {
                   amount: {
-                    value: "10.00", // Example donation amount
+                    value: donationAmount.toFixed(2), // Safely call toFixed on a number
                   },
                 },
               ],
@@ -107,7 +125,10 @@ export default {
 
     return {
       donationStore,
-      calculateGoalPosition,
+      presetAmounts,
+      sliderValue,
+      selectedAmount,
+      setPresetAmount,
     };
   },
 };
