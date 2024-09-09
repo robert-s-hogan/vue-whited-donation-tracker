@@ -1,13 +1,13 @@
 <template>
-  <div class="max-w-lg mx-auto p-6 bg-white shadow-lg rounded-lg">
-    <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">
+  <div class="max-w-lg mx-auto p-6 bg-white shadow-lg rounded-lg relative z-10">
+    <h2 class="text-2xl font-bold mb-6 text-center text-gray-800 relative z-10">
       Whited Donation Tracker
     </h2>
 
     <!-- Thermometer Progress Bar -->
-    <div class="relative mb-6">
+    <div class="relative mb-6 z-10">
       <!-- Background Bar -->
-      <div class="h-4 bg-gray-300 rounded-full overflow-hidden relative">
+      <div class="h-4 bg-gray-300 rounded-full overflow-visible relative">
         <!-- Progress Fill -->
         <div
           v-if="donationStore.progressPercentage"
@@ -17,23 +17,31 @@
 
         <!-- Goal Markers -->
         <div
-          v-for="goal in donationStore.goals"
+          v-for="(goal, index) in donationStore.goals"
           :key="goal.name"
-          class="marker relative group"
+          class="marker absolute top-0 group"
           :style="{ left: calculateGoalPosition(goal) + '%' }"
         >
           <!-- Marker Circle -->
           <div
-            class="h-4 w-4 bg-gray-600 rounded-full cursor-pointer hover:bg-green-600"
-            :style="{ transform: 'translateX(-50%)' }"
+            class="h-4 w-4 bg-gray-600 rounded-full cursor-pointer group-hover:bg-green-600 transform -translate-x-1/2"
           ></div>
 
           <!-- Popover (Shows on Hover) -->
           <div
-            class="popover absolute bottom-[150%] left-1/2 transform -translate-x-1/2 p-2 bg-white text-sm shadow-lg rounded-lg opacity-0 group-hover:opacity-100"
+            :class="{
+              'absolute bottom-full': index % 2 !== 0, // Odd markers above
+              'absolute top-full': index % 2 === 0, // Even markers below
+            }"
+            class="left-1/2 -translate-x-1/2 w-48 p-4 bg-white text-sm shadow-lg rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 ease-in-out z-[9999]"
           >
             <div class="font-bold">{{ goal.name }}</div>
             <div>Target: ${{ goal.target }}</div>
+            <!-- Additional content for popover -->
+            <div class="mt-2">
+              <a href="#" class="text-blue-500 underline">Learn More</a>
+              <!-- Add an image or any other content you need -->
+            </div>
           </div>
         </div>
       </div>
@@ -104,22 +112,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-.popover {
-  transition: opacity 0.3s ease;
-  opacity: 0;
-  z-index: 10;
-}
-
-.group:hover .popover {
-  opacity: 1; /* Show popover on hover */
-}
-
-.marker {
-  position: absolute;
-  top: 0;
-  transform: translateX(-50%);
-  cursor: pointer;
-}
-</style>
