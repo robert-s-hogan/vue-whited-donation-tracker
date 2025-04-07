@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "clean": "rm -rf node_modules pnpm-lock.yaml dist && pnpm install",
-    "dev": "vite",
-    "build": "vite build",
-    "serve": "vite preview",
-    "lint": "eslint --fix",
-    "type-check": "tsc --noEmit"
+    "clean": "pnpm exec rimraf node_modules pnpm-lock.yaml dist && pnpm install",
+    "dev": "pnpm exec vite",
+    "build": "pnpm exec vite build",
+    "serve": "pnpm exec vite preview",
+    "lint": "pnpm exec eslint --fix",
+    "type-check": "pnpm exec tsc --noEmit"
   },
   "dependencies": {
     "@vitejs/plugin-vue": "5.1.3",
